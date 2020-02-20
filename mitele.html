@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mitelemao - Mitele</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <!--VIDEO JS STYLE-->
+    <link href="https://vjs.zencdn.net/7.5.4/video-js.css" rel="stylesheet">
+    <!--VIDEO JS STYLE-->
+    <link href="https://fonts.googleapis.com/css?family=Patua+One&display=swap" rel="stylesheet">
+
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-142215087-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-142215087-1');
+
+    </script>
+
+</head>
+
+<body>
+    <h1 class="title">Telemao - Mitele</h1>
+    <div id="mitele-form">
+        <input id="link-mitele" type="text" placeholder="Introduzca enlace...">
+        <button type="button" onclick="submit(document.getElementById('link-mitele').value)">OK</button>
+    </div>
+    <div class="video-container">
+        <video id=mitele-video width=1200 height=600 class="video-js vjs-default-skin" controls> </video>
+    </div>
+</body>
+
+
+
+<!--DASH SCRIPT LOADING-->
+<script src="https://unpkg.com/video.js/dist/video.js"></script>
+<script src="assets/dash.all.min.js"></script>
+<script src="assets/videojs-dash.min.js"></script>
+<!--DASH SCRIPT LOADING-->
+<script>
+    var player = videojs('mitele-video');
+
+
+
+    //
+    //COMIENZO 
+    //DEL
+    //SCRAPPER
+    //
+    function submit(link) {
+        var init = {
+            method: 'GET',
+            mode: 'cors',
+        };
+
+        fetch("https://cors-anywhere.herokuapp.com/" + link)
+            .then(response => response.text())
+            .then((response) => {
+                const parser = new DOMParser();
+                const htmlDocument = parser.parseFromString(response, "text/html");
+                const element = htmlDocument.documentElement.querySelector('video');
+                const videoID = element.getAttribute('id')
+                console.log(clean(element.getAttribute('id')));
+                var newID = clean(element.getAttribute('id'));
+                mab(newID)
+            })
+            .catch(err => console.log(err));
+
+        var mab = (id) => fetch('https://mab.mediaset.es/1.0.0/get?oid=bitban_api&eid=/api/cms/mitele/videos/' + id + '/config/final.json?platform=mtweb')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(myJson) {
+                console.log(myJson['services']['caronte']);
+                caronte(myJson['services']['caronte']);
+            });
+
+        var caronte = (id) => fetch(id)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(myJson) {
+                console.log(myJson['dls']['0']['stream']);
+                player.src({
+                    src: myJson['dls']['0']['stream'],
+                    type: 'application/dash+xml'
+                });
+                player.play();
+            });
+
+        var clean = (id) => id.replace('MDSMSPlayer_', '').split('_')[0] + '_' + id.replace('MDSMSPlayer_', '').split('_')[1];
+    }
+    //
+    //FINAL 
+    //DEL
+    //SCRAPPER
+    //
+
+</script>
+
+</html>
